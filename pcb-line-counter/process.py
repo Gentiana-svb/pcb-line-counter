@@ -1,5 +1,5 @@
 import cv2
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 import os
 import numpy as np
 
@@ -36,4 +36,4 @@ contours, hierarchy = cv2.findContours(
     mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
 # 輪郭の個数を表示
-print(len(contours))
+messagebox.showinfo('個数', len(contours))
