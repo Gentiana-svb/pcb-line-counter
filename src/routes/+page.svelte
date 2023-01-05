@@ -1,57 +1,128 @@
 <script lang="ts">
   let imgSrc = ''
   let imgElement: HTMLImageElement
-  let files: FileList
-  const load = () => (imgSrc = URL.createObjectURL(files[0]))
+
+  const fileLoad = (files: FileList | undefined | null) =>
+    files?.length ? (imgSrc = URL.createObjectURL(files[0])) : null
+
+  const countColor = (vectL: number[], vectH: number[]) => {
+    const src = cv.imread(imgElement)
+
+    const thL = new cv.Mat(src.rows, src.cols, src.type(), vectL)
+    const thH = new cv.Mat(src.rows, src.cols, src.type(), vectH)
+    const mask = new cv.Mat()
+    cv.inRange(src, thL, thH, mask)
+    const temp = new cv.Mat()
+    cv.findContours(
+      mask,
+      new cv.MatVector(),
+      temp,
+      cv.RETR_EXTERNAL,
+      cv.CHAIN_APPROX_SIMPLE,
+      new cv.Point()
+    )
+
+    const count = temp.cols
+
+    thL.delete()
+    thH.delete()
+    mask.delete()
+    temp.delete()
+    src.delete()
+
+    return count
+  }
+
+  const imgLoad = () => {
+    redCount = countColor([200, 0, 0, 0], [255, 0, 0, 255])
+    blueCount = countColor([0, 0, 200, 0], [0, 0, 255, 255])
+  }
+
+  let redCount = 0
+  let blueCount = 0
 </script>
 
-<div>
-  <div class="inputoutput">
-    <img
-      src={imgSrc}
-      bind:this={imgElement}
-      on:load={() => {
-        const src = cv.imread(imgElement)
-        const red_l = new cv.Mat(src.rows, src.cols, src.type(), [255, 0, 0, 0])
-        const red_h = new cv.Mat(src.rows, src.cols, src.type(), [255, 0, 0, 255])
-        const blue_l = new cv.Mat(src.rows, src.cols, src.type(), [0, 0, 255, 0])
-        const blue_h = new cv.Mat(src.rows, src.cols, src.type(), [0, 0, 255, 255])
-        const mask_blue = new cv.Mat()
-        const mask_red = new cv.Mat()
-        cv.inRange(src, red_l, red_h, mask_red)
-        cv.inRange(src, blue_l, blue_h, mask_blue)
-        let temp = new cv.MatVector()
-        let temp2 = new cv.Mat()
-        cv.findContours(
-          mask_blue,
-          temp,
-          temp2,
-          cv.RETR_EXTERNAL,
-          cv.CHAIN_APPROX_SIMPLE,
-          new cv.Point()
-        )
-        console.log(temp)
-        console.log(temp2)
-        console.log('count', temp2.cols)
-        cv.imshow('canvasOutput', mask_blue)
-        // mask.delete()
-        src.delete()
-      }}
-      alt=""
-    />
-    <div class="caption">
-      imageSrc
+<main
+  on:dragover|preventDefault
+  on:dragleave|preventDefault
+  on:drop|preventDefault={e => fileLoad(e.dataTransfer?.files)}
+>
+  <div class="result">
+    <span class="result-label">Red</span>
+    <span class="result-label">{redCount}</span>
+    <span class="result-label">Blue</span>
+    <span class="result-label">{blueCount}</span>
+  </div>
+  <span class="control">
+    <button>Paste image</button>
+    <label>
       <input
         type="file"
         accept="image/*"
-        bind:files
-        on:change={() => (files.length ? load() : null)}
-        name="file"
+        on:change={e => fileLoad(e.currentTarget?.files)}
+        style:display="none"
       />
-    </div>
-  </div>
-  <div class="inputoutput">
-    <canvas id="canvasOutput" />
-    <div class="caption">canvasOutput</div>
-  </div>
-</div>
+      Select image
+    </label>
+    or drag and drop
+  </span>
+  {#if imgSrc}
+    <img class="preview" src={imgSrc} width="200px" alt="Preview" />
+  {/if}
+  <img style:display="none" src={imgSrc} bind:this={imgElement} on:load={imgLoad} alt="" />
+</main>
+
+<style>
+  .preview {
+    margin: 1em 0;
+  }
+  .result {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1em;
+    margin: 1em 0;
+  }
+  .result-label {
+    font-family: sans-serif;
+    font-size: 1.5em;
+    font-weight: bold;
+  }
+  .control {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0.5em 0;
+  }
+  main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+  }
+  label {
+    display: inline-block;
+    padding: 0.5em 1em;
+    color: #fff;
+    background-color: rgb(58, 150, 171);
+    border-radius: 4px;
+    transition: 0.4s;
+    cursor: pointer;
+    font-family: sans-serif;
+    font-size: 1em;
+    user-select: none;
+  }
+  button {
+    display: inline-block;
+    padding: 0.5em 1em;
+    color: #fff;
+    background-color: rgb(58, 150, 171);
+    border-radius: 4px;
+    border: none;
+    transition: 0.4s;
+    font-size: 1em;
+    cursor: pointer;
+    font-family: sans-serif;
+    user-select: none;
+  }
+</style>
