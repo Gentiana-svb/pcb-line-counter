@@ -8,7 +8,11 @@ const config = {
   kit: {
     adapter: adapter({
       fallback: 'index.html'
-    })
+    }),
+    trailingSlash: 'always',
+    paths: {
+      base: process.env.NODE_ENV === 'production' ? '/pcb-line-counter' : ''
+    }
   }
 }
 
