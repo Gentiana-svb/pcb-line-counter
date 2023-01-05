@@ -3,9 +3,14 @@
 
   let imgSrc = ''
   let imgElement: HTMLImageElement
+  let precessing = false
 
-  const fileLoad = (files: FileList | undefined | null) =>
-    files?.length ? (imgSrc = URL.createObjectURL(files[0])) : null
+  const fileLoad = (files: FileList | undefined | null) => {
+    if (files?.length) {
+      precessing = true
+      imgSrc = URL.createObjectURL(files[0])
+    }
+  }
 
   const countColor = (vectL: number[], vectH: number[]) => {
     const src = cv.imread(imgElement)
@@ -38,6 +43,7 @@
   const imgLoad = () => {
     redCount = countColor([200, 0, 0, 0], [255, 0, 0, 255])
     blueCount = countColor([0, 0, 200, 0], [0, 0, 255, 255])
+    precessing = false
   }
 
   let redCount = 0
@@ -48,83 +54,39 @@
   on:dragover|preventDefault
   on:dragleave|preventDefault
   on:drop|preventDefault={e => fileLoad(e.dataTransfer?.files)}
+  class="h-screen w-screen flex flex-col items-center justify-center"
 >
-  <div class="result">
-    <span class="result-label">Red</span>
-    <span class="result-label">{redCount}</span>
-    <span class="result-label">Blue</span>
-    <span class="result-label">{blueCount}</span>
-  </div>
-  <span class="control">
-    <button>Paste image</button>
-    <label>
+  {#if imgSrc}
+    {#if precessing}
+      <div class="text-3xl font-bold m-4">Loading...</div>
+    {:else}
+      <div class="grid grid-auto-2 text-3xl font-bold gap-2 m-4">
+        <div>Red</div>
+        <div>{redCount}</div>
+        <div>Blue</div>
+        <div>{blueCount}</div>
+      </div>
+    {/if}
+  {/if}
+  <div class="grid grid-auto-3 items-center gap-3 m-3">
+    <button class="bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white rounded px-3 py-2">
+      Paste image
+    </button>
+    <label
+      class="px-3 py-2 rounded cursor-pointer bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white"
+    >
       <input
         type="file"
         accept="image/*"
         on:change={e => fileLoad(e.currentTarget?.files)}
-        style:display="none"
+        class="hidden"
       />
       Select image
     </label>
     or drag and drop
-  </span>
+  </div>
   {#if imgSrc}
-    <img class="preview" src={imgSrc} width="200px" alt="Preview" />
+    <img src={imgSrc} class="w-96 m-2" alt="Preview" />
   {/if}
-  <img style:display="none" src={imgSrc} bind:this={imgElement} on:load={imgLoad} alt="" />
+  <img class="hidden" src={imgSrc} bind:this={imgElement} on:load={imgLoad} alt="" />
 </main>
-
-<style>
-  .preview {
-    margin: 1em 0;
-  }
-  .result {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1em;
-    margin: 1em 0;
-  }
-  .result-label {
-    font-family: sans-serif;
-    font-size: 1.5em;
-    font-weight: bold;
-  }
-  .control {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0.5em 0;
-  }
-  main {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-  }
-  label {
-    display: inline-block;
-    padding: 0.5em 1em;
-    color: #fff;
-    background-color: rgb(58, 150, 171);
-    border-radius: 4px;
-    transition: 0.4s;
-    cursor: pointer;
-    font-family: sans-serif;
-    font-size: 1em;
-    user-select: none;
-  }
-  button {
-    display: inline-block;
-    padding: 0.5em 1em;
-    color: #fff;
-    background-color: rgb(58, 150, 171);
-    border-radius: 4px;
-    border: none;
-    transition: 0.4s;
-    font-size: 1em;
-    cursor: pointer;
-    font-family: sans-serif;
-    user-select: none;
-  }
-</style>
