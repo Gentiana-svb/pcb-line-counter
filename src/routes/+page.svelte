@@ -97,6 +97,7 @@
     {/if}
   {/if}
   <div class="grid grid-auto-3 items-center gap-3 m-3">
+    Drag and drop or
     <button
       class="bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white rounded px-3 py-2"
       on:click={onPaste}
@@ -115,7 +116,6 @@
       />
       Select image
     </label>
-    or drag and drop
   </div>
   {#if imgSrc}
     <img src={imgSrc} class="w-96 m-2" alt="Preview" />
