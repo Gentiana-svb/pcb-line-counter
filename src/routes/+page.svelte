@@ -1,12 +1,13 @@
 <script lang="ts">
+  import CopyButton from '$lib/components/CopyButton.svelte'
+  import { copyText } from '$lib/utils/copyText'
+  import { countColor } from '$lib/utils/countColor'
   import '../app.css'
 
   let imgSrc = ''
   let imgElement: HTMLImageElement
   let inputElement: HTMLInputElement | null
   let processing = false
-  let redCount = 0
-  let blueCount = 0
 
   const fileLoad = (files: FileList | undefined | null) => {
     if (files?.length) {
@@ -19,37 +20,10 @@
     if (inputElement) inputElement.value = ''
   }
 
-  const countColor = (vectL: number[], vectH: number[]) => {
-    const src = cv.imread(imgElement)
-
-    const thL = new cv.Mat(src.rows, src.cols, src.type(), vectL)
-    const thH = new cv.Mat(src.rows, src.cols, src.type(), vectH)
-    const mask = new cv.Mat()
-    cv.inRange(src, thL, thH, mask)
-    const temp = new cv.Mat()
-    cv.findContours(
-      mask,
-      new cv.MatVector(),
-      temp,
-      cv.RETR_EXTERNAL,
-      cv.CHAIN_APPROX_SIMPLE,
-      new cv.Point()
-    )
-
-    const count = temp.cols
-
-    thL.delete()
-    thH.delete()
-    mask.delete()
-    temp.delete()
-    src.delete()
-
-    return count
-  }
-
   const imgLoad = () => {
-    redCount = countColor([200, 0, 0, 0], [255, 0, 0, 255])
-    blueCount = countColor([0, 0, 200, 0], [0, 0, 255, 255])
+    const maskBy = countColor(imgElement)
+    count.red = maskBy([200, 0, 0, 0], [255, 0, 0, 255])
+    count.blue = maskBy([0, 0, 200, 0], [0, 0, 255, 255])
     processing = false
   }
 
@@ -76,6 +50,22 @@
 
     imgSrc = URL.createObjectURL(blob)
   }
+
+  const autoCopied = {
+    red: false,
+    blue: false
+  }
+
+  const count = {
+    red: 0,
+    blue: 0
+  }
+
+  $: autoCopied.red = count.red !== 0
+  $: autoCopied.blue = count.red === 0 && count.blue !== 0
+
+  $: if (autoCopied.red) copyText(count.red.toString())
+  $: if (autoCopied.blue) copyText(count.blue.toString())
 </script>
 
 <main
@@ -88,11 +78,23 @@
     {#if processing}
       <div class="text-3xl font-bold m-4">Loading...</div>
     {:else}
-      <div class="grid grid-auto-2 text-3xl font-bold gap-2 m-4">
+      <div class="grid grid-auto-4 items-center text-3xl font-bold gap-2 m-4">
         <div>Red</div>
-        <div>{redCount}</div>
+        <div>{count.red}</div>
+        <CopyButton text={count.red.toString()} />
+        <div class="text-green-500 text-base">
+          {#if autoCopied.red}
+            Auto copied
+          {/if}
+        </div>
         <div>Blue</div>
-        <div>{blueCount}</div>
+        <div>{count.blue}</div>
+        <CopyButton text={count.blue.toString()} />
+        <div class="text-green-500 text-base">
+          {#if autoCopied.blue}
+            Auto copied
+          {/if}
+        </div>
       </div>
     {/if}
   {/if}
@@ -118,7 +120,7 @@
     </label>
   </div>
   {#if imgSrc}
-    <img src={imgSrc} class="w-96 m-2" alt="Preview" />
+    <img src={imgSrc} class="w-96 m-2 max-h-[70vh]" alt="Preview" />
   {/if}
   <img class="hidden" src={imgSrc} bind:this={imgElement} on:load={imgLoad} alt="" />
 </main>
