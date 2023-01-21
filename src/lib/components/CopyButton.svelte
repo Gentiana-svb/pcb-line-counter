@@ -8,7 +8,7 @@
 </script>
 
 <button
-  class="flex items-center text-base font-normal"
+  class="flex items-center text-base font-normal hover:bg-gray-200 rounded p-2"
   on:click={() => {
     copyText(text).then(() => {
       visible = true
@@ -16,7 +16,7 @@
     })
   }}
 >
-  <Copy Class="w-5 m-2" />
+  <Copy Class="w-5 mr-2" />
   {#if visible}
     Copied!!
   {:else}

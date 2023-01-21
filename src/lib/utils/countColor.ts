@@ -1,12 +1,10 @@
+import { maskImage } from '$lib/utils/maskImage'
+
 export const countColor = (imgElement: HTMLImageElement) => {
   const src = cv.imread(imgElement)
 
-  return (vectL: number[], vectH: number[]) => {
-    const thL = new cv.Mat(src.rows, src.cols, src.type(), vectL)
-    const thH = new cv.Mat(src.rows, src.cols, src.type(), vectH)
-
-    const mask = new cv.Mat()
-    cv.inRange(src, thL, thH, mask)
+  return (vectL: number[], vectH: number[]): number => {
+    const mask = maskImage(src, vectL, vectH)
 
     const temp = new cv.Mat()
     cv.findContours(
@@ -18,8 +16,6 @@ export const countColor = (imgElement: HTMLImageElement) => {
       new cv.Point()
     )
 
-    const count = temp.cols
-
-    return count
+    return temp.cols
   }
 }
